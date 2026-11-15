@@ -1,0 +1,5 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const src=fs.readFileSync('www/game/game.js','utf8');
+const finish=src.slice(src.indexOf('async function finish()'),src.indexOf('function boardPoint'));
+(async()=>{for(const n of [1,5,101]){const elements={win:{hidden:true}};let resolveFx,notes=0,saves=0;const fx={play:()=>new Promise(r=>resolveFx=r)};const ctx={level:{n},won:false,completed:new Set(),sync(){},save(){saves++},Cosmos:{forLevel:n=>n===5},pendingFact:null,window:{AstralFX:fx},AstralFX:fx,$:id=>elements[id]??={},moves:4,performance:{now:()=>4000},startTime:0,openNote(){notes++}};vm.createContext(ctx);vm.runInContext(finish,ctx);const task=ctx.finish();assert(ctx.won);assert(ctx.completed.has(n));assert.equal(saves,1);assert(elements.win.hidden);if(n===5)assert.equal(ctx.pendingFact,5);resolveFx(true);await task;if(n===5)assert.equal(notes,1);else assert.equal(elements.win.hidden,false);}
+console.log('PASS: completion waits for animation, saves first, preserves cosmos milestones and final-level behavior');})();
